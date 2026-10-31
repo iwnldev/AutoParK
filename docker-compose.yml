@@ -1,0 +1,15 @@
+# MySQL local para desenvolvimento: docker compose up -d
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: autopark
+      MYSQL_DATABASE: autopark
+      TZ: America/Bahia
+    ports:
+      - "3306:3306"
+    volumes:
+      - autopark_data:/var/lib/mysql
+volumes:
+  autopark_data:
