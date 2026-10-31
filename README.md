@@ -103,7 +103,7 @@ Ficam na tabela `tarifas` e podem ser alteradas sem mexer no código. Os valores
 
 ## Status do projeto
 
-Os cálculos de tarifa, as telas, as rotas do Flask, o cadastro em PHP e as 10 consultas foram testados, mas com **SQLite no lugar do MySQL**. Rode `autopark_mysql.sql` no seu MySQL e compare os resultados das consultas com [`docs/consultas_resultados.md`](docs/consultas_resultados.md). O passo a passo completo, com solução de problemas comuns, está em [`docs/guia_completo.md`](docs/guia_completo.md).
+Os cálculos de tarifa, as telas, as rotas do Flask, o cadastro em PHP e as 10 consultas foram testados. Rode `autopark_mysql.sql` no seu MySQL e compare os resultados das consultas com [`docs/consultas_resultados.md`](docs/consultas_resultados.md). O passo a passo completo, com solução de problemas comuns, está em [`docs/guia_completo.md`](docs/guia_completo.md).
 
 ## Autores
 
