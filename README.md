@@ -26,6 +26,28 @@ O problema principal é a **incerteza na ocupação das vagas** e a **lentidão 
 - **Cadastros:** clientes, veículos e vagas.
 - **Integridade no banco:** o próprio MySQL impede dois tíquetes abertos para a mesma placa ou a mesma vaga.
 
+## Telas
+
+As capturas abaixo usam dados de exemplo (veículos fictícios).
+
+**Painel do pátio:** vagas livres, ocupação, caixa do dia e o mapa das baias por setor. Tocar numa vaga ocupada abre a saída.
+
+![Painel do pátio](docs/img/painel.png)
+
+**Entrada:** a placa é digitada num campo em formato de placa; os demais dados só valem para placas novas.
+
+![Registro de entrada](docs/img/entrada.png)
+
+**Saída:** permanência, valor a receber e a liberação da vaga em um passo.
+
+![Confirmação de saída](docs/img/saida.png)
+
+**Caixa:** fechamento por dia, com cada saída e o total arrecadado.
+
+![Caixa do dia](docs/img/caixa.png)
+
+As telas se adaptam a celular e tablet, e o tíquete pode ser impresso direto do navegador.
+
 ## Tecnologias
 
 | Camada | Tecnologia |
@@ -66,7 +88,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Acesse http://localhost:5000.
+No Windows, use `py -m pip install -r requirements.txt` e `py app.py`. Acesse http://localhost:5000.
+
+Na primeira execução, o sistema confere as tabelas, carrega as tarifas e cria 26 vagas (setores A, B e C) se as tabelas estiverem vazias.
 
 As duas aplicações leem a conexão das variáveis de ambiente `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` e `DB_PASSWORD` (padrão: `localhost`, `3306`, `autopark`, `root` e senha vazia). Se o seu `root` tem senha, defina `DB_PASSWORD` antes de rodar.
 
@@ -85,8 +109,9 @@ autopark/
 ├── autopark_mysql.sql     base completa: banco, tabelas e dados
 ├── sql/                   modelo físico, dados e consultas
 ├── php/                   aplicação de cadastro em PHP
+├── static/                visual do sistema (autopark.css; o PHP usa uma cópia em php/)
 ├── app.py                 sistema de operação em Flask
-├── docs/                  modelos, resultados das consultas e guia completo
+├── docs/                  modelos, resultados das consultas, capturas (img/) e guia completo
 ├── requirements.txt
 └── docker-compose.yml
 ```
@@ -103,16 +128,16 @@ Ficam na tabela `tarifas` e podem ser alteradas sem mexer no código. Os valores
 
 ## Status do projeto
 
-Os cálculos de tarifa, as telas, as rotas do Flask, o cadastro em PHP e as 10 consultas foram testados, mas com MYSQL. Rode `autopark_mysql.sql` no seu MySQL e compare os resultados das consultas com [`docs/consultas_resultados.md`](docs/consultas_resultados.md). O passo a passo completo, com solução de problemas comuns, está em [`docs/guia_completo.md`](docs/guia_completo.md).
+Os cálculos de tarifa, as telas (inclusive o novo visual, conferido por capturas de tela), as rotas do Flask, o cadastro em PHP e as 10 consultas foram testados, mas com **SQLite no lugar do MySQL**. Rode `autopark_mysql.sql` no seu MySQL e compare os resultados das consultas com [`docs/consultas_resultados.md`](docs/consultas_resultados.md). O passo a passo completo, com solução de problemas comuns, está em [`docs/guia_completo.md`](docs/guia_completo.md).
 
 ## Autores
 
 | Nome | GitHub |
 | --- | --- |
-| Diego de A. C. Moreira | [@iwnldev](https://github.com/iwnldev) |
-| Yago de A. C. Santiago | [@Yacs05](https://github.com/Yacs05) |
+| Diego de A. C. Moreira | [@SEU-USUARIO](https://github.com/SEU-USUARIO) |
+| Yago de A. C. Santiago | [@USUARIO-DO-YAGO](https://github.com/USUARIO-DO-YAGO) |
 
 ## Agradecimentos
 
-- Yago de Azevedo Cerqueira Santiago(https://github.com/Yacs05), pela ajuda no desenvolvimento do projeto.
+- [NOME DO AMIGO](https://github.com/USUARIO-DO-AMIGO), pela ajuda no desenvolvimento do projeto.
 - Professor Gean Paulo, pela orientação.

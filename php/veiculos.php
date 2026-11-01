@@ -51,17 +51,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $clientes = db()->query('SELECT id_cliente, nome, tipo FROM clientes ORDER BY nome')->fetchAll();
 $lista = db()->query(
-    'SELECT v.placa, v.modelo, v.cor, v.tipo_veiculo, c.nome
+    'SELECT v.placa, v.modelo, v.cor, v.tipo_veiculo, c.nome, c.tipo
      FROM veiculos v JOIN clientes c ON c.id_cliente = v.id_cliente ORDER BY v.placa'
 )->fetchAll();
 
-cabecalho('Veículos');
+cabecalho('Veículos', 'veiculos');
 ?>
-<div class="card">
-  <h1>Cadastro de veículo</h1>
-  <?php if ($ok): ?><div class="ok">Veículo cadastrado com sucesso.</div><?php endif; ?>
-  <?php foreach ($erros as $e): ?><div class="erro"><?= h($e) ?></div><?php endforeach; ?>
-  <form method="post" autocomplete="off">
+<h1>Veículos</h1>
+<?php if ($ok): ?><div class="msg ok" role="status">Veículo cadastrado.</div><?php endif; ?>
+<?php foreach ($erros as $e): ?><div class="msg erro" role="alert"><?= h($e) ?></div><?php endforeach; ?>
+<form method="post" class="panel" autocomplete="off">
+  <h2>Novo veículo</h2>
+  <div class="form-grid">
     <label>Placa<input name="placa" required maxlength="10" style="text-transform:uppercase" value="<?= h($_POST['placa'] ?? '') ?>"></label>
     <label>Modelo<input name="modelo" maxlength="60" value="<?= h($_POST['modelo'] ?? '') ?>"></label>
     <label>Cor<input name="cor" maxlength="30" value="<?= h($_POST['cor'] ?? '') ?>"></label>
@@ -77,17 +78,21 @@ cabecalho('Veículos');
         <?php endforeach; ?>
       </select>
     </label>
-    <button type="submit">Cadastrar</button>
-  </form>
-</div>
-<div class="card">
-  <h1>Frota cadastrada (<?= count($lista) ?>)</h1>
-  <table>
-    <tr><th>Placa</th><th>Modelo</th><th>Cor</th><th>Tipo</th><th>Proprietário</th></tr>
+    <button type="submit">Salvar veículo</button>
+  </div>
+</form>
+<section class="panel">
+  <h2><?= count($lista) ?> <?= count($lista) === 1 ? 'veículo cadastrado' : 'veículos cadastrados' ?></h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Placa</th><th>Modelo</th><th>Cor</th><th>Tipo</th><th>Proprietário</th></tr></thead>
+    <tbody>
     <?php foreach ($lista as $v): ?>
-      <tr><td><b><?= h($v['placa']) ?></b></td><td><?= h($v['modelo']) ?></td><td><?= h($v['cor']) ?></td>
-          <td><?= h($v['tipo_veiculo']) ?></td><td><?= h($v['nome']) ?></td></tr>
+      <tr><td><span class="plate"><?= h($v['placa']) ?></span></td><td><?= h($v['modelo']) ?></td><td><?= h($v['cor']) ?></td>
+          <td><?= h($v['tipo_veiculo']) ?></td>
+          <td><?= h($v['nome']) ?> <span class="chip <?= h(strtolower($v['tipo'])) ?>"><?= h($v['tipo']) ?></span></td></tr>
     <?php endforeach; ?>
-  </table>
-</div>
+    <?php if (!$lista): ?><tr><td colspan="5" class="empty">Nenhum veículo cadastrado.</td></tr><?php endif; ?>
+    </tbody>
+  </table></div>
+</section>
 <?php rodape();

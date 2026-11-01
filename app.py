@@ -1,4 +1,3 @@
-
 """AutoPark - gerenciamento de estacionamento (Flask + MySQL)."""
 import math
 import os
@@ -312,115 +311,205 @@ def caixa():
 
 
 # ------------------------------------------------------------ templates
+# O visual fica em static/autopark.css (o mesmo arquivo serve o PHP em php/autopark.css).
 BASE = """<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>AutoPark</title>
-<style>
-:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2530;--mut:#6b7785;--pri:#0b5fff;--ok:#12805c;--err:#c62828;--bd:#dde3ea}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink)}
-nav{background:#101a2b;display:flex;gap:4px;padding:0 16px;align-items:center;flex-wrap:wrap}
-nav b{color:#fff;margin-right:16px;padding:14px 0}nav a{color:#c9d3e3;text-decoration:none;padding:14px 12px}
-nav a:hover{background:#1b2a45;color:#fff}main{max-width:1100px;margin:20px auto;padding:0 16px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:16px}
-h1,h2{margin:0 0 12px}h1{font-size:1.4rem}h2{font-size:1.1rem}
-table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:.92rem}
-th{color:var(--mut);font-weight:600}
-form.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
-label{display:flex;flex-direction:column;font-size:.8rem;color:var(--mut);gap:4px}
-input,select{padding:9px;border:1px solid var(--bd);border-radius:6px;font-size:1rem}
-button,.btn{background:var(--pri);color:#fff;border:0;padding:10px 16px;border-radius:6px;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-block}
-.btn.sec{background:#e8edf4;color:var(--ink)}
-.msg{padding:10px 14px;border-radius:6px;margin-bottom:12px}.msg.ok{background:#dff5ec;color:var(--ok)}.msg.erro{background:#fde7e7;color:var(--err)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
-.kpi{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}.kpi small{color:var(--mut)}.kpi div{font-size:1.6rem;font-weight:700}
-.vagas{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
-.vaga{border-radius:8px;padding:10px;border:2px solid var(--ok);background:#effaf5;font-size:.85rem}
-.vaga.oc{border-color:var(--err);background:#fdf0f0}.vaga b{font-size:1.05rem}
-.big{font-size:2.2rem;font-weight:800}.placa{font-family:monospace;font-weight:700;letter-spacing:1px}
-@media print{nav,.noprint{display:none}}
-</style></head><body>
-<nav><b>🅿 AutoPark</b><a href="/">Painel</a><a href="/entrada">Entrada</a><a href="/saida">Saída</a>
-<a href="/clientes">Clientes</a><a href="/veiculos">Veículos</a><a href="/vagas">Vagas</a><a href="/caixa">Caixa</a></nav>
-<main>{% for cat,m in get_flashed_messages(with_categories=true) %}<div class="msg {{cat}}">{{m}}</div>{% endfor %}
-{% block c %}{% endblock %}</main></body></html>"""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="{{ url_for('static', filename='autopark.css') }}">
+</head><body>
+{% set ep = request.endpoint %}
+<header class="top"><div class="top-in">
+<a class="brand" href="{{ url_for('painel') }}"><span class="brand-p">P</span>AutoPark</a>
+<nav class="nav" aria-label="Principal">
+<a href="{{ url_for('painel') }}" {% if ep == 'painel' %}aria-current="page"{% endif %}>Painel</a>
+<a href="{{ url_for('entrada') }}" {% if ep == 'entrada' %}aria-current="page"{% endif %}>Entrada</a>
+<a href="{{ url_for('saida') }}" {% if ep in ('saida', 'saida_confirma') %}aria-current="page"{% endif %}>Saída</a>
+<a href="{{ url_for('clientes') }}" {% if ep == 'clientes' %}aria-current="page"{% endif %}>Clientes</a>
+<a href="{{ url_for('veiculos') }}" {% if ep == 'veiculos' %}aria-current="page"{% endif %}>Veículos</a>
+<a href="{{ url_for('vagas') }}" {% if ep == 'vagas' %}aria-current="page"{% endif %}>Vagas</a>
+<a href="{{ url_for('caixa') }}" {% if ep == 'caixa' %}aria-current="page"{% endif %}>Caixa</a>
+</nav></div></header>
+<main class="wrap">
+{% for cat, m in get_flashed_messages(with_categories=true) %}<div class="msg {{ cat }}" role="status">{{ m }}</div>{% endfor %}
+{% block c %}{% endblock %}
+</main></body></html>"""
 
 T = {"base.html": BASE}
 
 T["painel.html"] = """{% extends "base.html" %}{% block c %}
-<div class="kpis">
-<div class="kpi"><small>Vagas livres</small><div style="color:var(--ok)">{{livres}}</div></div>
-<div class="kpi"><small>Ocupadas</small><div style="color:var(--err)">{{ocupadas}}</div></div>
-<div class="kpi"><small>Total de vagas</small><div>{{total}}</div></div>
-<div class="kpi"><small>Faturado hoje ({{hoje.n}} saídas)</small><div>{{hoje.total|brl}}</div></div></div>
-<div class="card"><h2>Mapa do pátio</h2><div class="vagas">
-{% for v in vagas %}<div class="vaga {{'oc' if v.status=='Ocupada'}}"><b>{{v.numero_vaga}}</b> · {{v.setor}} · {{v.categoria}}<br>
-{% if v.placa %}<a class="placa" href="/saida/{{v.id_tiquete}}">{{v.placa}}</a><br><small>{{v.perm}}</small>{% else %}Livre{% endif %}</div>{% endfor %}
-</div></div>{% endblock %}"""
+{% set pct = ((ocupadas * 100 / total)|round|int) if total else 0 %}
+<div class="summary">
+<section class="panel">
+<p class="big">{{ livres }}<small>vagas livres de {{ total }}</small></p>
+<div class="meter" role="img" aria-label="{{ pct }}% do pátio ocupado"><span style="width:{{ pct }}%"></span></div>
+<p class="muted" style="margin:0">{{ ocupadas }} ocupadas, {{ pct }}% do pátio</p>
+</section>
+<section class="panel">
+<p class="muted" style="margin:0">Caixa de hoje</p>
+<p class="big">{{ hoje.total|brl }}</p>
+<p class="muted" style="margin:6px 0 14px">{{ hoje.n }} {{ 'saída' if hoje.n == 1 else 'saídas' }}</p>
+<a class="btn sec small" href="{{ url_for('caixa') }}">Ver caixa do dia</a>
+</section>
+</div>
+<section class="lot">
+<h2>Pátio agora</h2>
+<p class="hint">Toque numa vaga ocupada para dar saída ao veículo.</p>
+{% for setor, itens in vagas|groupby('setor') %}
+<div class="sector">
+<div class="sector-title"><h3>Setor {{ setor }}</h3>
+<span>{{ itens|selectattr('status', 'equalto', 'Livre')|list|length }} livres de {{ itens|length }}</span></div>
+<div class="bays">
+{% for v in itens %}
+{% if v.placa %}
+<a class="bay busy" href="{{ url_for('saida_confirma', id_tiquete=v.id_tiquete) }}" aria-label="Vaga {{ v.numero_vaga }}, placa {{ v.placa }}, ocupada há {{ v.perm }}. Dar saída.">
+<span class="bay-no">{{ v.numero_vaga }}</span>{% if v.categoria != 'Carro' %}<span class="bay-cat">{{ v.categoria }}</span>{% endif %}
+<span class="plate">{{ v.placa }}</span><span class="bay-time">{{ v.perm }}</span></a>
+{% else %}
+<div class="bay free"><span class="bay-no">{{ v.numero_vaga }}</span>{% if v.categoria != 'Carro' %}<span class="bay-cat">{{ v.categoria }}</span>{% endif %}
+<span class="bay-state">Livre</span></div>
+{% endif %}
+{% endfor %}
+</div></div>
+{% endfor %}
+</section>{% endblock %}"""
 
 T["entrada.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card"><h1>Registrar entrada</h1>
-<form class="grid" method="post">
-<label>Placa<input name="placa" required maxlength="10" autofocus style="text-transform:uppercase"></label>
+<h1>Registrar entrada</h1>
+<form method="post" class="panel">
+<div class="plate-field">
+<label for="placa">Placa do veículo</label>
+<input id="placa" class="plate-input" name="placa" required maxlength="8" autofocus autocomplete="off" placeholder="ABC1D23">
+</div>
+<h2 style="margin-top:26px">Dados do veículo</h2>
+<p class="hint" style="margin:0 0 14px">Só são usados quando a placa ainda não está cadastrada. Mensalistas e clientes antigos são reconhecidos pela placa.</p>
+<div class="form-grid">
 <label>Tipo de veículo<select name="tipo_veiculo"><option>Carro</option><option>Moto</option><option>Utilitário</option></select></label>
-<label>Modelo<input name="modelo"></label><label>Cor<input name="cor"></label>
-<label>Nome (opcional)<input name="nome"></label>
-<label>Vaga PCD?<select name="pcd"><option value="0">Não</option><option value="1">Sim</option></select></label>
-<button>Gerar tíquete</button></form>
-<p style="color:var(--mut);font-size:.85rem">Placas já cadastradas (inclusive mensalistas) são reconhecidas automaticamente; modelo, cor e tipo só valem para placas novas.</p></div>{% endblock %}"""
+<label>Modelo<input name="modelo" maxlength="60"></label>
+<label>Cor<input name="cor" maxlength="30"></label>
+<label>Nome do cliente (opcional)<input name="nome" maxlength="120"></label>
+<label class="check"><input type="checkbox" name="pcd" value="1"> Vaga PCD</label>
+</div>
+<p style="margin:22px 0 0"><button type="submit">Gerar tíquete</button></p>
+</form>{% endblock %}"""
 
 T["tiquete.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card" style="max-width:420px"><h1>Tíquete #{{t.id_tiquete}}</h1>
-<div class="placa big">{{t.placa}}</div>
-<p>{{t.modelo or ''}} {{t.cor or ''}}<br>Cliente: {{t.nome}} ({{t.tipo}})<br>
-Vaga: <b>{{t.numero_vaga}}</b><br>Entrada: {{t.hora_entrada|dt}}
-{% if t.hora_saida %}<br>Saída: {{t.hora_saida|dt}}<br>Valor: <b>{{t.valor_calculado|brl}}</b>{% endif %}</p>
-<p class="noprint"><button onclick="window.print()">Imprimir</button> <a class="btn sec" href="/">Painel</a></p></div>{% endblock %}"""
+<div class="ticket">
+<h1>Tíquete {{ t.id_tiquete }}</h1>
+<span class="plate lg">{{ t.placa }}</span>
+<dl class="facts">
+<dt>Veículo</dt><dd>{{ t.modelo or '-' }}{% if t.cor %}, {{ t.cor }}{% endif %}</dd>
+<dt>Cliente</dt><dd>{{ t.nome }} <span class="chip {{ t.tipo|lower }}">{{ t.tipo }}</span></dd>
+<dt>Vaga</dt><dd>{{ t.numero_vaga }}</dd>
+<dt>Entrada</dt><dd>{{ t.hora_entrada|dt }}</dd>
+{% if t.hora_saida %}<dt>Saída</dt><dd>{{ t.hora_saida|dt }}</dd><dt>Valor</dt><dd>{{ t.valor_calculado|brl }}</dd>{% endif %}
+</dl>
+<p class="noprint" style="margin:18px 0 0"><button type="button" onclick="window.print()">Imprimir tíquete</button>
+<a class="btn sec" href="{{ url_for('painel') }}">Voltar ao painel</a></p>
+</div>{% endblock %}"""
 
 T["saida.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card"><h1>Registrar saída</h1>
-<form class="grid" method="post"><label>Placa<input name="placa" required autofocus style="text-transform:uppercase"></label>
-<button>Calcular</button></form></div>
-<div class="card"><h2>Veículos no pátio</h2><table><tr><th>Tíquete</th><th>Placa</th><th>Vaga</th><th>Entrada</th><th>Tipo</th><th></th></tr>
-{% for t in abertos %}<tr><td>#{{t.id_tiquete}}</td><td class="placa">{{t.placa}}</td><td>{{t.numero_vaga}}</td><td>{{t.hora_entrada|dt}}</td><td>{{t.tipo}}</td>
-<td><a class="btn sec" href="/saida/{{t.id_tiquete}}">Saída</a></td></tr>{% else %}<tr><td colspan="6">Pátio vazio.</td></tr>{% endfor %}</table></div>{% endblock %}"""
+<h1>Registrar saída</h1>
+<form method="post" class="panel">
+<div class="plate-field">
+<label for="placa">Placa do veículo</label>
+<input id="placa" class="plate-input" name="placa" required maxlength="8" autofocus autocomplete="off" placeholder="ABC1D23">
+<button type="submit">Calcular valor</button>
+</div></form>
+<section class="panel"><h2>Veículos no pátio</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Tíquete</th><th>Placa</th><th>Vaga</th><th>Entrada</th><th>Cliente</th><th></th></tr></thead>
+<tbody>
+{% for t in abertos %}<tr><td>{{ t.id_tiquete }}</td><td><span class="plate">{{ t.placa }}</span></td><td>{{ t.numero_vaga }}</td>
+<td>{{ t.hora_entrada|dt }}</td><td><span class="chip {{ t.tipo|lower }}">{{ t.tipo }}</span></td>
+<td class="num"><a class="btn sec small" href="{{ url_for('saida_confirma', id_tiquete=t.id_tiquete) }}">Dar saída</a></td></tr>
+{% else %}<tr><td colspan="6" class="empty">Nenhum veículo no pátio.</td></tr>{% endfor %}
+</tbody></table></div></section>{% endblock %}"""
 
 T["saida_confirma.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card" style="max-width:460px"><h1>Confirmar saída</h1>
-<div class="placa big">{{t.placa}}</div>
-<p>Cliente: {{t.nome}} ({{t.tipo}})<br>Vaga {{t.numero_vaga}}<br>Entrada: {{t.hora_entrada|dt}}<br>Saída: {{agora|dt}}<br>Permanência: <b>{{perm}}</b></p>
-<div class="big">{{valor|brl}}</div>{% if t.tipo=='Mensalista' %}<small>Mensalista: sem cobrança por permanência.</small>{% endif %}
-<form method="post" style="margin-top:14px"><button>Receber e liberar vaga</button> <a class="btn sec" href="/saida">Voltar</a></form></div>{% endblock %}"""
+<h1>Confirmar saída</h1>
+<div class="split">
+<section class="panel">
+<span class="plate lg">{{ t.placa }}</span>
+<dl class="facts">
+<dt>Cliente</dt><dd>{{ t.nome }} <span class="chip {{ t.tipo|lower }}">{{ t.tipo }}</span></dd>
+<dt>Vaga</dt><dd>{{ t.numero_vaga }}</dd>
+<dt>Entrada</dt><dd>{{ t.hora_entrada|dt }}</dd>
+<dt>Saída</dt><dd>{{ agora|dt }}</dd>
+<dt>Permanência</dt><dd>{{ perm }}</dd>
+</dl></section>
+<section class="total">
+<p class="label">Valor a receber</p>
+<p class="big">{{ valor|brl }}</p>
+{% if t.tipo == 'Mensalista' %}<p class="note">Mensalista: sem cobrança por permanência.</p>{% endif %}
+<form method="post" class="actions"><button type="submit">Receber e liberar vaga</button>
+<a class="btn sec" href="{{ url_for('saida') }}">Voltar</a></form>
+</section></div>{% endblock %}"""
 
 T["clientes.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card"><h1>Novo cliente</h1><form class="grid" method="post">
-<label>Nome<input name="nome" required></label><label>CPF<input name="cpf" maxlength="14"></label>
-<label>Telefone<input name="telefone"></label>
-<label>Tipo<select name="tipo"><option>Mensalista</option><option>Avulso</option></select></label><button>Salvar</button></form></div>
-<div class="card"><table><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>Tipo</th></tr>
-{% for c in lista %}<tr><td>{{c.id_cliente}}</td><td>{{c.nome}}</td><td>{{c.cpf or ''}}</td><td>{{c.telefone or ''}}</td><td>{{c.tipo}}</td></tr>{% endfor %}</table></div>{% endblock %}"""
+<h1>Clientes</h1>
+<form method="post" class="panel"><h2>Novo cliente</h2>
+<div class="form-grid">
+<label>Nome<input name="nome" required maxlength="120"></label>
+<label>CPF<input name="cpf" maxlength="14" placeholder="000.000.000-00"></label>
+<label>Telefone<input name="telefone" maxlength="20"></label>
+<label>Tipo<select name="tipo"><option>Avulso</option><option>Mensalista</option></select></label>
+<button type="submit">Salvar cliente</button></div></form>
+<section class="panel"><div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>Tipo</th></tr></thead><tbody>
+{% for c in lista %}<tr><td>{{ c.id_cliente }}</td><td>{{ c.nome }}</td><td>{{ c.cpf or '' }}</td><td>{{ c.telefone or '' }}</td>
+<td><span class="chip {{ c.tipo|lower }}">{{ c.tipo }}</span></td></tr>
+{% else %}<tr><td colspan="5" class="empty">Nenhum cliente cadastrado.</td></tr>{% endfor %}
+</tbody></table></div></section>{% endblock %}"""
 
 T["veiculos.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card"><h1>Novo veículo</h1><form class="grid" method="post">
+<h1>Veículos</h1>
+<form method="post" class="panel"><h2>Novo veículo</h2>
+<div class="form-grid">
 <label>Placa<input name="placa" required maxlength="10" style="text-transform:uppercase"></label>
-<label>Modelo<input name="modelo"></label><label>Cor<input name="cor"></label>
+<label>Modelo<input name="modelo" maxlength="60"></label>
+<label>Cor<input name="cor" maxlength="30"></label>
 <label>Tipo<select name="tipo_veiculo"><option>Carro</option><option>Moto</option><option>Utilitário</option></select></label>
-<label>Proprietário<select name="id_cliente">{% for c in clientes %}<option value="{{c.id_cliente}}">{{c.nome}} ({{c.tipo}})</option>{% endfor %}</select></label>
-<button>Salvar</button></form></div>
-<div class="card"><table><tr><th>Placa</th><th>Modelo</th><th>Cor</th><th>Tipo</th><th>Proprietário</th></tr>
-{% for v in lista %}<tr><td class="placa">{{v.placa}}</td><td>{{v.modelo or ''}}</td><td>{{v.cor or ''}}</td><td>{{v.tipo_veiculo}}</td><td>{{v.nome}} ({{v.tipo}})</td></tr>{% endfor %}</table></div>{% endblock %}"""
+<label>Proprietário<select name="id_cliente">{% for c in clientes %}<option value="{{ c.id_cliente }}">{{ c.nome }} ({{ c.tipo }})</option>{% endfor %}</select></label>
+<button type="submit">Salvar veículo</button></div></form>
+<section class="panel"><div class="table-wrap"><table>
+<thead><tr><th>Placa</th><th>Modelo</th><th>Cor</th><th>Tipo</th><th>Proprietário</th></tr></thead><tbody>
+{% for v in lista %}<tr><td><span class="plate">{{ v.placa }}</span></td><td>{{ v.modelo or '' }}</td><td>{{ v.cor or '' }}</td><td>{{ v.tipo_veiculo }}</td>
+<td>{{ v.nome }} <span class="chip {{ v.tipo|lower }}">{{ v.tipo }}</span></td></tr>
+{% else %}<tr><td colspan="5" class="empty">Nenhum veículo cadastrado.</td></tr>{% endfor %}
+</tbody></table></div></section>{% endblock %}"""
 
 T["vagas.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card"><h1>Nova vaga</h1><form class="grid" method="post">
-<label>Número<input name="numero_vaga" type="number" required></label><label>Setor<input name="setor" required maxlength="20"></label>
-<label>Categoria<select name="categoria"><option>Carro</option><option>Moto</option><option>PCD</option></select></label><button>Salvar</button></form></div>
-<div class="card"><table><tr><th>Nº</th><th>Setor</th><th>Categoria</th><th>Status</th></tr>
-{% for v in lista %}<tr><td>{{v.numero_vaga}}</td><td>{{v.setor}}</td><td>{{v.categoria}}</td><td>{{v.status}}</td></tr>{% endfor %}</table></div>{% endblock %}"""
+<h1>Vagas</h1>
+<form method="post" class="panel"><h2>Nova vaga</h2>
+<div class="form-grid">
+<label>Número<input name="numero_vaga" type="number" min="1" required></label>
+<label>Setor<input name="setor" required maxlength="20"></label>
+<label>Categoria<select name="categoria"><option>Carro</option><option>Moto</option><option>PCD</option></select></label>
+<button type="submit">Salvar vaga</button></div></form>
+<section class="panel"><div class="table-wrap"><table>
+<thead><tr><th>Número</th><th>Setor</th><th>Categoria</th><th>Situação</th></tr></thead><tbody>
+{% for v in lista %}<tr><td>{{ v.numero_vaga }}</td><td>{{ v.setor }}</td><td>{{ v.categoria }}</td><td>{{ v.status }}</td></tr>
+{% else %}<tr><td colspan="4" class="empty">Nenhuma vaga cadastrada.</td></tr>{% endfor %}
+</tbody></table></div></section>{% endblock %}"""
 
 T["caixa.html"] = """{% extends "base.html" %}{% block c %}
-<div class="card"><h1>Fechamento de caixa</h1><form class="grid" method="get"><label>Dia<input type="date" name="dia" value="{{dia}}"></label><button>Filtrar</button></form></div>
-<div class="kpis"><div class="kpi"><small>Total do dia</small><div>{{total|brl}}</div></div><div class="kpi"><small>Saídas</small><div>{{lista|length}}</div></div></div>
-<div class="card"><table><tr><th>Tíquete</th><th>Placa</th><th>Tipo</th><th>Entrada</th><th>Saída</th><th>Valor</th></tr>
-{% for t in lista %}<tr><td>#{{t.id_tiquete}}</td><td class="placa">{{t.placa}}</td><td>{{t.tipo}}</td><td>{{t.hora_entrada|dt}}</td><td>{{t.hora_saida|dt}}</td><td>{{t.valor_calculado|brl}}</td></tr>
-{% else %}<tr><td colspan="6">Sem movimento nesta data.</td></tr>{% endfor %}</table></div>{% endblock %}"""
+<h1>Caixa</h1>
+<div class="summary">
+<form method="get" class="panel"><div class="form-grid">
+<label>Dia<input type="date" name="dia" value="{{ dia }}"></label><button type="submit">Ver dia</button></div></form>
+<section class="panel"><p class="muted" style="margin:0">Total do dia, {{ lista|length }} {{ 'saída' if lista|length == 1 else 'saídas' }}</p>
+<p class="big">{{ total|brl }}</p></section></div>
+<section class="panel"><div class="table-wrap"><table>
+<thead><tr><th>Tíquete</th><th>Placa</th><th>Cliente</th><th>Entrada</th><th>Saída</th><th class="num">Valor</th></tr></thead><tbody>
+{% for t in lista %}<tr><td>{{ t.id_tiquete }}</td><td><span class="plate">{{ t.placa }}</span></td>
+<td><span class="chip {{ t.tipo|lower }}">{{ t.tipo }}</span></td><td>{{ t.hora_entrada|dt }}</td><td>{{ t.hora_saida|dt }}</td>
+<td class="num">{{ t.valor_calculado|brl }}</td></tr>
+{% else %}<tr><td colspan="6" class="empty">Nenhuma saída neste dia.</td></tr>{% endfor %}
+</tbody>
+{% if lista %}<tfoot><tr><td colspan="5">Total</td><td class="num">{{ total|brl }}</td></tr></tfoot>{% endif %}
+</table></div></section>{% endblock %}"""
 
 app.jinja_loader = DictLoader(T)
 
